@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "commonjs",
+		"lib": ["ES2020"],
+		"declaration": true,
+		"outDir": "./dist",
+		"rootDir": "./",
+		"strict": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"moduleResolution": "node",
+		"typeRoots": ["./node_modules/@types", "./node_modules/n8n-workflow"],
+		"types": ["node", "n8n-workflow"]
+	},
+	"include": ["nodes/**/*", "credentials/**/*"],
+	"exclude": ["node_modules/**/*", "dist/**/*"]
+} 
