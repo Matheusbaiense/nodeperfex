@@ -1187,10 +1187,9 @@ export class Perfex implements INodeType {
 		const credentials = await this.getCredentials('perfexApi');
 		
 		const baseUrl = credentials.url as string;
-		const apiKey = credentials.apiKey as string;
 		const apiToken = credentials.apiToken as string;
 		
-		// Configurar cliente HTTP para API Perfex
+		// Configurar cliente HTTP para API Perfex - usando apenas API Token
 		const axios = require('axios');
 		const httpClient = axios.create({
 			baseURL: baseUrl,
@@ -1198,7 +1197,6 @@ export class Perfex implements INodeType {
 			headers: {
 				'Content-Type': 'application/json',
 				'Accept': 'application/json',
-				'X-API-KEY': apiKey,
 				'X-API-TOKEN': apiToken
 			}
 		} );

@@ -11,23 +11,12 @@ export class PerfexApi implements ICredentialType {
 	properties: INodeProperties[] = [
 		{
 			displayName: 'URL Base',
-			name: 'baseUrl',
+			name: 'url',
 			type: 'string',
 			default: '',
 			required: true,
 			description: 'URL base do seu Perfex CRM (ex: https://seu-perfex.com)',
 			placeholder: 'https://seu-perfex.com',
-		},
-		{
-			displayName: 'API Key',
-			name: 'apiKey',
-			type: 'string',
-			typeOptions: {
-				password: true,
-			},
-			default: '',
-			required: true,
-			description: 'Chave da API do Perfex CRM',
 		},
 		{
 			displayName: 'API Token',
@@ -38,7 +27,18 @@ export class PerfexApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Token da API do Perfex CRM',
+			description: 'Token da API do Perfex CRM. Este é o único campo obrigatório para autenticação.',
+		},
+		{
+			displayName: 'API Key',
+			name: 'apiKey',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: '',
+			required: false,
+			description: 'Chave da API do Perfex CRM (opcional). Se não fornecida, será usado o mesmo valor do Token para compatibilidade.',
 		},
 	];
 
@@ -46,7 +46,6 @@ export class PerfexApi implements ICredentialType {
 		type: 'generic',
 		properties: {
 			headers: {
-				'X-API-KEY': '={{$credentials.apiKey}}',
 				'X-API-TOKEN': '={{$credentials.apiToken}}',
 			},
 		},
