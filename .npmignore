@@ -1,0 +1,44 @@
+# Arquivos de desenvolvimento
+.git/
+.github/
+.vscode/
+.idea/
+*.md
+!README.md
+!LICENSE
+.eslintrc*
+.prettierrc
+.gitignore
+.npmignore
+tsconfig.json
+gulpfile.js
+
+# Arquivos de teste
+test/
+tests/
+coverage/
+.nyc_output/
+
+# Arquivos de desenvolvimento
+examples/
+docs/
+todo.md
+analise_repositorios.md
+arquitetura_requisitos.md
+
+# Arquivos de ambiente
+.env*
+!.env.example
+
+# Arquivos de build
+src/
+nodes/
+credentials/
+*.ts
+!*.d.ts
+
+# Outros
+.DS_Store
+*.log
+tmp/
+temp/ 
