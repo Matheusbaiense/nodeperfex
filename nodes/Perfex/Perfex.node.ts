@@ -211,7 +211,7 @@ export class Perfex implements INodeType {
 						name: 'company',
 						type: 'string',
 						default: '',
-						required: true,
+
 					},
 					{
 						displayName: 'CNPJ',
@@ -275,7 +275,7 @@ export class Perfex implements INodeType {
 						name: 'userid',
 						type: 'string',
 						default: '',
-						required: true,
+
 					},
 					{
 						displayName: 'Nome',
@@ -295,6 +295,7 @@ export class Perfex implements INodeType {
 						displayName: 'Email',
 						name: 'email',
 						type: 'string',
+						placeholder: 'name@email.com',
 						default: '',
 						required: true,
 					},
@@ -342,7 +343,7 @@ export class Perfex implements INodeType {
 						name: 'name',
 						type: 'string',
 						default: '',
-						required: true,
+
 					},
 					{
 						displayName: 'Fonte',
@@ -360,6 +361,7 @@ export class Perfex implements INodeType {
 						displayName: 'Email',
 						name: 'email',
 						type: 'string',
+						placeholder: 'name@email.com',
 						default: '',
 					},
 					{
@@ -424,7 +426,7 @@ export class Perfex implements INodeType {
 						name: 'name',
 						type: 'string',
 						default: '',
-						required: true,
+
 					},
 					{
 						displayName: 'ID do Cliente',
@@ -493,7 +495,7 @@ export class Perfex implements INodeType {
 						name: 'name',
 						type: 'string',
 						default: '',
-						required: true,
+
 					},
 					{
 						displayName: 'Descrição',
@@ -561,7 +563,7 @@ export class Perfex implements INodeType {
 						name: 'clientid',
 						type: 'string',
 						default: '',
-						required: true,
+
 					},
 					{
 						displayName: 'Data',
