@@ -4,77 +4,328 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
+	IDataObject,
 	INode,
-	INodeParameters,
 } from 'n8n-workflow';
 
-import {
-	PerfexClient,
-	IPerfexClient,
-	IPerfexContact,
-	IPerfexLead,
-	IPerfexProject,
-	IPerfexTask,
-	IPerfexInvoice,
-	IPerfexInvoiceItem,
-	IPerfexResponse,
-	IPerfexListResponse,
-} from '../../src/types';
-
-type ProjectInputData = Omit<Partial<IPerfexProject>, 'members'> & {
-	members?: string;
-};
-
-type TaskInputData = Omit<Partial<IPerfexTask>, 'assignees'> & {
-	assignees?: string;
-};
-
-type InvoiceInputData = Omit<Partial<IPerfexInvoice>, 'items'> & {
-	items?: string;
-};
-
+// Estendendo a interface IExecuteFunctions para incluir métodos específicos do Perfex
 interface IPerfexExecuteFunctions extends IExecuteFunctions {
-	handleClientOperations(
-		perfex: PerfexClient,
-		operation: string,
+	getNodeParameter(
+		parameterName: string,
 		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexClient> | IPerfexListResponse<IPerfexClient>>;
-	handleContactOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexContact> | IPerfexListResponse<IPerfexContact>>;
-	handleLeadOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexLead> | IPerfexListResponse<IPerfexLead>>;
-	handleProjectOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexProject> | IPerfexListResponse<IPerfexProject>>;
-	handleTaskOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexTask> | IPerfexListResponse<IPerfexTask>>;
-	handleInvoiceOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexInvoice> | IPerfexListResponse<IPerfexInvoice>>;
+		fallbackValue?: any,
+	): any;
+	getNode(): INode;
 }
 
+// Funções auxiliares para processar operações por recurso
+async function processClientOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
+	const endpoint = '/api/clients';
+	
+	switch (operation) {
+		case 'getAll':
+			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+			const filters = options.filters ? JSON.parse(options.filters as string) : {};
+			const limit = options.limit as number;
+			
+			if (limit) {
+				filters.limit = limit;
+			}
+			
+			const response = await httpClient.get(endpoint, { params: filters } );
+			return response.data;
+			
+		case 'get':
+			const clientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
+			const getResponse = await httpClient.get(`${endpoint}/${clientId}` );
+			return getResponse.data;
+			
+		case 'create':
+			const clientData = executeFunctions.getNodeParameter('clientData', itemIndex, {}) as IDataObject;
+			const createResponse = await httpClient.post(endpoint, clientData );
+			return createResponse.data;
+			
+		case 'update':
+			const updateClientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
+			const updateClientData = executeFunctions.getNodeParameter('clientData', itemIndex, {}) as IDataObject;
+			const updateResponse = await httpClient.put(`${endpoint}/${updateClientId}`, updateClientData );
+			return updateResponse.data;
+			
+		case 'delete':
+			const deleteClientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
+			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteClientId}` );
+			return deleteResponse.data;
+			
+		default:
+			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+	}
+}
+
+async function processContactOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
+	const endpoint = '/api/contacts';
+	
+	switch (operation) {
+		case 'getAll':
+			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+			const filters = options.filters ? JSON.parse(options.filters as string) : {};
+			const limit = options.limit as number;
+			
+			if (limit) {
+				filters.limit = limit;
+			}
+			
+			const response = await httpClient.get(endpoint, { params: filters } );
+			return response.data;
+			
+		case 'get':
+			const contactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
+			const getResponse = await httpClient.get(`${endpoint}/${contactId}` );
+			return getResponse.data;
+			
+		case 'create':
+			const contactData = executeFunctions.getNodeParameter('contactData', itemIndex, {}) as IDataObject;
+			const createResponse = await httpClient.post(endpoint, contactData );
+			return createResponse.data;
+			
+		case 'update':
+			const updateContactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
+			const updateContactData = executeFunctions.getNodeParameter('contactData', itemIndex, {}) as IDataObject;
+			const updateResponse = await httpClient.put(`${endpoint}/${updateContactId}`, updateContactData );
+			return updateResponse.data;
+			
+		case 'delete':
+			const deleteContactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
+			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteContactId}` );
+			return deleteResponse.data;
+			
+		default:
+			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+	}
+}
+
+async function processLeadOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
+	const endpoint = '/api/leads';
+	
+	switch (operation) {
+		case 'getAll':
+			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+			const filters = options.filters ? JSON.parse(options.filters as string) : {};
+			const limit = options.limit as number;
+			
+			if (limit) {
+				filters.limit = limit;
+			}
+			
+			const response = await httpClient.get(endpoint, { params: filters } );
+			return response.data;
+			
+		case 'get':
+			const leadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
+			const getResponse = await httpClient.get(`${endpoint}/${leadId}` );
+			return getResponse.data;
+			
+		case 'create':
+			const leadData = executeFunctions.getNodeParameter('leadData', itemIndex, {}) as IDataObject;
+			const createResponse = await httpClient.post(endpoint, leadData );
+			return createResponse.data;
+			
+		case 'update':
+			const updateLeadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
+			const updateLeadData = executeFunctions.getNodeParameter('leadData', itemIndex, {}) as IDataObject;
+			const updateResponse = await httpClient.put(`${endpoint}/${updateLeadId}`, updateLeadData );
+			return updateResponse.data;
+			
+		case 'delete':
+			const deleteLeadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
+			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteLeadId}` );
+			return deleteResponse.data;
+			
+		default:
+			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+	}
+}
+
+async function processProjectOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
+	const endpoint = '/api/projects';
+	
+	switch (operation) {
+		case 'getAll':
+			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+			const filters = options.filters ? JSON.parse(options.filters as string) : {};
+			const limit = options.limit as number;
+			
+			if (limit) {
+				filters.limit = limit;
+			}
+			
+			const response = await httpClient.get(endpoint, { params: filters } );
+			return response.data;
+			
+		case 'get':
+			const projectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
+			const getResponse = await httpClient.get(`${endpoint}/${projectId}` );
+			return getResponse.data;
+			
+		case 'create':
+			const projectData = executeFunctions.getNodeParameter('projectData', itemIndex, {}) as IDataObject;
+			
+			// Converter membros de string para array
+			if (projectData.members && typeof projectData.members === 'string') {
+				projectData.members = (projectData.members as string).split(',').map(id => parseInt(id.trim(), 10));
+			}
+			
+			const createResponse = await httpClient.post(endpoint, projectData );
+			return createResponse.data;
+			
+		case 'update':
+			const updateProjectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
+			const updateProjectData = executeFunctions.getNodeParameter('projectData', itemIndex, {}) as IDataObject;
+			
+			// Converter membros de string para array
+			if (updateProjectData.members && typeof updateProjectData.members === 'string') {
+				updateProjectData.members = (updateProjectData.members as string).split(',').map(id => parseInt(id.trim(), 10));
+			}
+			
+			const updateResponse = await httpClient.put(`${endpoint}/${updateProjectId}`, updateProjectData );
+			return updateResponse.data;
+			
+		case 'delete':
+			const deleteProjectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
+			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteProjectId}` );
+			return deleteResponse.data;
+			
+		default:
+			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+	}
+}
+
+async function processTaskOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
+	const endpoint = '/api/tasks';
+	
+	switch (operation) {
+		case 'getAll':
+			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+			const filters = options.filters ? JSON.parse(options.filters as string) : {};
+			const limit = options.limit as number;
+			
+			if (limit) {
+				filters.limit = limit;
+			}
+			
+			const response = await httpClient.get(endpoint, { params: filters } );
+			return response.data;
+			
+		case 'get':
+			const taskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
+			const getResponse = await httpClient.get(`${endpoint}/${taskId}` );
+			return getResponse.data;
+			
+		case 'create':
+			const taskData = executeFunctions.getNodeParameter('taskData', itemIndex, {}) as IDataObject;
+			
+			// Converter responsáveis de string para array
+			if (taskData.assignees && typeof taskData.assignees === 'string') {
+				taskData.assignees = (taskData.assignees as string).split(',').map(id => parseInt(id.trim(), 10));
+			}
+			
+			const createResponse = await httpClient.post(endpoint, taskData );
+			return createResponse.data;
+			
+		case 'update':
+			const updateTaskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
+			const updateTaskData = executeFunctions.getNodeParameter('taskData', itemIndex, {}) as IDataObject;
+			
+			// Converter responsáveis de string para array
+			if (updateTaskData.assignees && typeof updateTaskData.assignees === 'string') {
+				updateTaskData.assignees = (updateTaskData.assignees as string).split(',').map(id => parseInt(id.trim(), 10));
+			}
+			
+			const updateResponse = await httpClient.put(`${endpoint}/${updateTaskId}`, updateTaskData );
+			return updateResponse.data;
+			
+		case 'delete':
+			const deleteTaskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
+			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteTaskId}` );
+			return deleteResponse.data;
+			
+		default:
+			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+	}
+}
+
+async function processInvoiceOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
+	const endpoint = '/api/invoices';
+	
+	switch (operation) {
+		case 'getAll':
+			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+			const filters = options.filters ? JSON.parse(options.filters as string) : {};
+			const limit = options.limit as number;
+			
+			if (limit) {
+				filters.limit = limit;
+			}
+			
+			const response = await httpClient.get(endpoint, { params: filters } );
+			return response.data;
+			
+		case 'get':
+			const invoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
+			const getResponse = await httpClient.get(`${endpoint}/${invoiceId}` );
+			return getResponse.data;
+			
+		case 'create':
+			const invoiceData = executeFunctions.getNodeParameter('invoiceData', itemIndex, {}) as IDataObject;
+			
+			// Converter itens de string JSON para array
+			if (invoiceData.items && typeof invoiceData.items === 'string') {
+				try {
+					invoiceData.items = JSON.parse(invoiceData.items as string);
+				} catch (error) {
+					throw new NodeOperationError(executeFunctions.getNode(), 'Formato de itens inválido. Deve ser um array JSON válido.');
+				}
+			}
+			
+			const createResponse = await httpClient.post(endpoint, invoiceData );
+			return createResponse.data;
+			
+		case 'update':
+			const updateInvoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
+			const updateInvoiceData = executeFunctions.getNodeParameter('invoiceData', itemIndex, {}) as IDataObject;
+			
+			// Converter itens de string JSON para array
+			if (updateInvoiceData.items && typeof updateInvoiceData.items === 'string') {
+				try {
+					updateInvoiceData.items = JSON.parse(updateInvoiceData.items as string);
+				} catch (error) {
+					throw new NodeOperationError(executeFunctions.getNode(), 'Formato de itens inválido. Deve ser um array JSON válido.');
+				}
+			}
+			
+			const updateResponse = await httpClient.put(`${endpoint}/${updateInvoiceId}`, updateInvoiceData );
+			return updateResponse.data;
+			
+		case 'delete':
+			const deleteInvoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
+			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteInvoiceId}` );
+			return deleteResponse.data;
+			
+		default:
+			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+	}
+}
+
+// Implementação direta do cliente Perfex sem importar módulo externo
+// Isso evita o erro "Cannot find module '../../src/types'"
 export class Perfex implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Perfex CRM',
-		name: 'perfex',
+		name: 'perfexCrm',
 		icon: 'file:perfex.svg',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Interagir com o Perfex CRM através do módulo WON API',
+		description: 'Interagir com o Perfex CRM via WON API',
 		defaults: {
 			name: 'Perfex CRM',
 		},
@@ -142,535 +393,863 @@ export class Perfex implements INodeType {
 						name: 'Criar',
 						value: 'create',
 						description: 'Criar um novo registro',
-						action: 'Criar um novo registro',
-					},
-					{
-						name: 'Excluir',
-						value: 'delete',
-						description: 'Excluir um registro',
-						action: 'Excluir um registro',
-					},
-					{
-						name: 'Obter',
-						value: 'get',
-						description: 'Obter um registro por ID',
-						action: 'Obter um registro por ID',
-					},
-					{
-						name: 'Listar',
-						value: 'list',
-						description: 'Listar todos os registros',
-						action: 'Listar todos os registros',
+						action: 'Criar um registro',
 					},
 					{
 						name: 'Atualizar',
 						value: 'update',
 						description: 'Atualizar um registro existente',
-						action: 'Atualizar um registro existente',
+						action: 'Atualizar um registro',
+					},
+					{
+						name: 'Obter',
+						value: 'get',
+						description: 'Obter um registro específico',
+						action: 'Obter um registro',
+					},
+					{
+						name: 'Listar',
+						value: 'getAll',
+						description: 'Obter todos os registros',
+						action: 'Obter todos os registros',
+					},
+					{
+						name: 'Deletar',
+						value: 'delete',
+						description: 'Deletar um registro',
+						action: 'Deletar um registro',
 					},
 				],
-				default: 'list',
+				default: 'getAll',
 			},
-			// Campos específicos para cada recurso
+
+			// ----------------------------------
+			//         Cliente: Campos
+			// ----------------------------------
 			{
-				displayName: 'ID',
-				name: 'id',
+				displayName: 'ID do Cliente',
+				name: 'clientId',
 				type: 'string',
+				default: '',
+				required: true,
 				displayOptions: {
 					show: {
-						operation: ['get', 'update', 'delete'],
 						resource: [
 							'client',
-							'contact',
-							'lead',
-							'project',
-							'task',
-							'invoice',
+						],
+						operation: [
+							'get',
+							'update',
+							'delete',
 						],
 					},
 				},
-				default: '',
-				required: true,
-				description: 'ID do registro',
+				description: 'ID do cliente',
 			},
-			// Campos para criação/atualização de clientes
 			{
 				displayName: 'Dados do Cliente',
 				name: 'clientData',
 				type: 'collection',
+				placeholder: 'Adicionar Campo',
+				default: {},
 				displayOptions: {
 					show: {
-						operation: ['create', 'update'],
-						resource: ['client'],
+						resource: [
+							'client',
+						],
+						operation: [
+							'create',
+							'update',
+						],
 					},
 				},
-				default: {},
 				options: [
 					{
-						displayName: 'Empresa',
+						displayName: 'Nome da Empresa',
 						name: 'company',
 						type: 'string',
 						default: '',
-
+						description: 'Nome da empresa do cliente',
 					},
 					{
-						displayName: 'CNPJ',
+						displayName: 'VAT',
 						name: 'vat',
 						type: 'string',
 						default: '',
+						description: 'Número do VAT do cliente',
 					},
 					{
 						displayName: 'Telefone',
 						name: 'phonenumber',
 						type: 'string',
 						default: '',
+						description: 'Número de telefone do cliente',
 					},
 					{
 						displayName: 'País',
 						name: 'country',
 						type: 'string',
 						default: '',
+						description: 'País do cliente',
 					},
 					{
 						displayName: 'Cidade',
 						name: 'city',
 						type: 'string',
 						default: '',
+						description: 'Cidade do cliente',
 					},
 					{
 						displayName: 'CEP',
 						name: 'zip',
 						type: 'string',
 						default: '',
+						description: 'CEP do cliente',
 					},
 					{
 						displayName: 'Estado',
 						name: 'state',
 						type: 'string',
 						default: '',
+						description: 'Estado do cliente',
 					},
 					{
 						displayName: 'Endereço',
 						name: 'address',
 						type: 'string',
 						default: '',
+						description: 'Endereço do cliente',
 					},
-				],
-			},
-			// Campos para criação/atualização de contatos
-			{
-				displayName: 'Dados do Contato',
-				name: 'contactData',
-				type: 'collection',
-				displayOptions: {
-					show: {
-						operation: ['create', 'update'],
-						resource: ['contact'],
-					},
-				},
-				default: {},
-				options: [
 					{
-						displayName: 'ID do Cliente',
-						name: 'userid',
+						displayName: 'Website',
+						name: 'website',
 						type: 'string',
 						default: '',
-
-					},
-					{
-						displayName: 'Nome',
-						name: 'firstname',
-						type: 'string',
-						default: '',
-						required: true,
-					},
-					{
-						displayName: 'Sobrenome',
-						name: 'lastname',
-						type: 'string',
-						default: '',
-						required: true,
-					},
-					{
-						displayName: 'Email',
-						name: 'email',
-						type: 'string',
-						placeholder: 'name@email.com',
-						default: '',
-						required: true,
-					},
-					{
-						displayName: 'Telefone',
-						name: 'phonenumber',
-						type: 'string',
-						default: '',
-					},
-					{
-						displayName: 'Cargo',
-						name: 'title',
-						type: 'string',
-						default: '',
-					},
-					{
-						displayName: 'Contato Principal',
-						name: 'is_primary',
-						type: 'boolean',
-						default: false,
+						description: 'Website do cliente',
 					},
 					{
 						displayName: 'Ativo',
 						name: 'active',
 						type: 'boolean',
 						default: true,
+						description: 'Se o cliente está ativo',
 					},
 				],
 			},
-			// Campos para criação/atualização de leads
+
+			// ----------------------------------
+			//         Contato: Campos
+			// ----------------------------------
 			{
-				displayName: 'Dados do Lead',
-				name: 'leadData',
-				type: 'collection',
+				displayName: 'ID do Contato',
+				name: 'contactId',
+				type: 'string',
+				default: '',
+				required: true,
 				displayOptions: {
 					show: {
-						operation: ['create', 'update'],
-						resource: ['lead'],
+						resource: [
+							'contact',
+						],
+						operation: [
+							'get',
+							'update',
+							'delete',
+						],
 					},
 				},
+				description: 'ID do contato',
+			},
+			{
+				displayName: 'Dados do Contato',
+				name: 'contactData',
+				type: 'collection',
+				placeholder: 'Adicionar Campo',
 				default: {},
+				displayOptions: {
+					show: {
+						resource: [
+							'contact',
+						],
+						operation: [
+							'create',
+							'update',
+						],
+					},
+				},
 				options: [
 					{
-						displayName: 'Nome',
-						name: 'name',
+						displayName: 'ID do Cliente',
+						name: 'userid',
 						type: 'string',
 						default: '',
-
+						description: 'ID do cliente ao qual o contato pertence',
 					},
 					{
-						displayName: 'Fonte',
-						name: 'source',
-						type: 'number',
-						default: 1,
+						displayName: 'Nome',
+						name: 'firstname',
+						type: 'string',
+						default: '',
+						description: 'Nome do contato',
 					},
 					{
-						displayName: 'Status',
-						name: 'status',
-						type: 'number',
-						default: 1,
+						displayName: 'Sobrenome',
+						name: 'lastname',
+						type: 'string',
+						default: '',
+						description: 'Sobrenome do contato',
 					},
 					{
 						displayName: 'Email',
 						name: 'email',
 						type: 'string',
-						placeholder: 'name@email.com',
 						default: '',
+						description: 'Email do contato',
 					},
 					{
 						displayName: 'Telefone',
 						name: 'phonenumber',
 						type: 'string',
 						default: '',
+						description: 'Número de telefone do contato',
+					},
+					{
+						displayName: 'Cargo',
+						name: 'title',
+						type: 'string',
+						default: '',
+						description: 'Cargo do contato',
+					},
+					{
+						displayName: 'É Primário',
+						name: 'is_primary',
+						type: 'boolean',
+						default: false,
+						description: 'Se o contato é o contato primário',
+					},
+					{
+						displayName: 'Senha',
+						name: 'password',
+						type: 'string',
+						default: '',
+						description: 'Senha do contato para acesso ao portal do cliente',
+					},
+					{
+						displayName: 'Ativo',
+						name: 'active',
+						type: 'boolean',
+						default: true,
+						description: 'Se o contato está ativo',
+					},
+				],
+			},
+
+			// ----------------------------------
+			//         Lead: Campos
+			// ----------------------------------
+			{
+				displayName: 'ID do Lead',
+				name: 'leadId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'lead',
+						],
+						operation: [
+							'get',
+							'update',
+							'delete',
+						],
+					},
+				},
+				description: 'ID do lead',
+			},
+			{
+				displayName: 'Dados do Lead',
+				name: 'leadData',
+				type: 'collection',
+				placeholder: 'Adicionar Campo',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: [
+							'lead',
+						],
+						operation: [
+							'create',
+							'update',
+						],
+					},
+				},
+				options: [
+					{
+						displayName: 'Nome',
+						name: 'name',
+						type: 'string',
+						default: '',
+						description: 'Nome do lead',
+					},
+					{
+						displayName: 'Fonte',
+						name: 'source',
+						type: 'number',
+						default: 0,
+						description: 'ID da fonte do lead',
+					},
+					{
+						displayName: 'Status',
+						name: 'status',
+						type: 'number',
+						default: 0,
+						description: 'ID do status do lead',
+					},
+					{
+						displayName: 'Responsável',
+						name: 'assigned',
+						type: 'number',
+						default: 0,
+						description: 'ID do usuário responsável pelo lead',
+					},
+					{
+						displayName: 'Email',
+						name: 'email',
+						type: 'string',
+						default: '',
+						description: 'Email do lead',
+					},
+					{
+						displayName: 'Telefone',
+						name: 'phonenumber',
+						type: 'string',
+						default: '',
+						description: 'Número de telefone do lead',
 					},
 					{
 						displayName: 'Empresa',
 						name: 'company',
 						type: 'string',
 						default: '',
+						description: 'Nome da empresa do lead',
 					},
 					{
 						displayName: 'Endereço',
 						name: 'address',
 						type: 'string',
 						default: '',
+						description: 'Endereço do lead',
 					},
 					{
 						displayName: 'Cidade',
 						name: 'city',
 						type: 'string',
 						default: '',
+						description: 'Cidade do lead',
 					},
 					{
 						displayName: 'Estado',
 						name: 'state',
 						type: 'string',
 						default: '',
+						description: 'Estado do lead',
 					},
 					{
 						displayName: 'País',
 						name: 'country',
 						type: 'string',
 						default: '',
+						description: 'País do lead',
 					},
 					{
 						displayName: 'CEP',
 						name: 'zip',
 						type: 'string',
 						default: '',
+						description: 'CEP do lead',
+					},
+					{
+						displayName: 'Descrição',
+						name: 'description',
+						type: 'string',
+						default: '',
+						description: 'Descrição do lead',
 					},
 				],
 			},
-			// Campos para criação/atualização de projetos
+
+			// ----------------------------------
+			//         Projeto: Campos
+			// ----------------------------------
+			{
+				displayName: 'ID do Projeto',
+				name: 'projectId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'project',
+						],
+						operation: [
+							'get',
+							'update',
+							'delete',
+						],
+					},
+				},
+				description: 'ID do projeto',
+			},
 			{
 				displayName: 'Dados do Projeto',
 				name: 'projectData',
 				type: 'collection',
+				placeholder: 'Adicionar Campo',
+				default: {},
 				displayOptions: {
 					show: {
-						operation: ['create', 'update'],
-						resource: ['project'],
+						resource: [
+							'project',
+						],
+						operation: [
+							'create',
+							'update',
+						],
 					},
 				},
-				default: {},
 				options: [
 					{
 						displayName: 'Nome',
 						name: 'name',
 						type: 'string',
 						default: '',
-
+						description: 'Nome do projeto',
 					},
 					{
 						displayName: 'ID do Cliente',
 						name: 'clientid',
 						type: 'string',
 						default: '',
-						required: true,
+						description: 'ID do cliente ao qual o projeto pertence',
 					},
 					{
-						displayName: 'Tipo de Cobrança',
+						displayName: 'Tipo de Faturamento',
 						name: 'billing_type',
 						type: 'number',
-						default: 1,
+						default: 0,
+						description: 'Tipo de faturamento do projeto',
 					},
 					{
 						displayName: 'Status',
 						name: 'status',
 						type: 'number',
-						default: 1,
+						default: 0,
+						description: 'ID do status do projeto',
 					},
 					{
 						displayName: 'Data de Início',
 						name: 'start_date',
 						type: 'dateTime',
 						default: '',
+						description: 'Data de início do projeto',
 					},
 					{
 						displayName: 'Prazo',
 						name: 'deadline',
 						type: 'dateTime',
 						default: '',
+						description: 'Prazo do projeto',
 					},
 					{
 						displayName: 'Descrição',
 						name: 'description',
 						type: 'string',
-						typeOptions: {
-							rows: 4,
-						},
 						default: '',
+						description: 'Descrição do projeto',
+					},
+					{
+						displayName: 'Custo do Projeto',
+						name: 'project_cost',
+						type: 'number',
+						default: 0,
+						description: 'Custo do projeto',
+					},
+					{
+						displayName: 'Taxa por Hora',
+						name: 'project_rate_per_hour',
+						type: 'number',
+						default: 0,
+						description: 'Taxa por hora do projeto',
+					},
+					{
+						displayName: 'Horas Estimadas',
+						name: 'estimated_hours',
+						type: 'number',
+						default: 0,
+						description: 'Horas estimadas para o projeto',
 					},
 					{
 						displayName: 'Membros',
 						name: 'members',
 						type: 'string',
 						default: '',
-						description: 'IDs dos membros separados por vírgula',
+						description: 'IDs dos membros do projeto, separados por vírgula',
 					},
 				],
 			},
-			// Campos para criação/atualização de tarefas
+
+			// ----------------------------------
+			//         Tarefa: Campos
+			// ----------------------------------
+			{
+				displayName: 'ID da Tarefa',
+				name: 'taskId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'task',
+						],
+						operation: [
+							'get',
+							'update',
+							'delete',
+						],
+					},
+				},
+				description: 'ID da tarefa',
+			},
 			{
 				displayName: 'Dados da Tarefa',
 				name: 'taskData',
 				type: 'collection',
+				placeholder: 'Adicionar Campo',
+				default: {},
 				displayOptions: {
 					show: {
-						operation: ['create', 'update'],
-						resource: ['task'],
+						resource: [
+							'task',
+						],
+						operation: [
+							'create',
+							'update',
+						],
 					},
 				},
-				default: {},
 				options: [
 					{
 						displayName: 'Nome',
 						name: 'name',
 						type: 'string',
 						default: '',
-
+						description: 'Nome da tarefa',
 					},
 					{
 						displayName: 'Descrição',
 						name: 'description',
 						type: 'string',
-						typeOptions: {
-							rows: 4,
-						},
 						default: '',
+						description: 'Descrição da tarefa',
 					},
 					{
 						displayName: 'Prioridade',
 						name: 'priority',
-						type: 'number',
+						type: 'options',
+						options: [
+							{
+								name: 'Baixa',
+								value: 1,
+							},
+							{
+								name: 'Média',
+								value: 2,
+							},
+							{
+								name: 'Alta',
+								value: 3,
+							},
+							{
+								name: 'Urgente',
+								value: 4,
+							},
+							{
+								name: 'Emergência',
+								value: 5,
+							},
+						],
 						default: 2,
+						description: 'Prioridade da tarefa',
 					},
 					{
 						displayName: 'Status',
 						name: 'status',
 						type: 'number',
-						default: 1,
+						default: 0,
+						description: 'ID do status da tarefa',
 					},
 					{
 						displayName: 'Data de Início',
 						name: 'startdate',
 						type: 'dateTime',
 						default: '',
-					},
-					{
-						displayName: 'Data de Término',
-						name: 'duedate',
-						type: 'dateTime',
-						default: '',
-					},
-					{
-						displayName: 'ID do Projeto',
-						name: 'project_id',
-						type: 'string',
-						default: '',
-					},
-					{
-						displayName: 'Responsáveis',
-						name: 'assignees',
-						type: 'string',
-						default: '',
-						description: 'IDs dos responsáveis separados por vírgula',
-					},
-				],
-			},
-			// Campos para criação/atualização de faturas
-			{
-				displayName: 'Dados da Fatura',
-				name: 'invoiceData',
-				type: 'collection',
-				displayOptions: {
-					show: {
-						operation: ['create', 'update'],
-						resource: ['invoice'],
-					},
-				},
-				default: {},
-				options: [
-					{
-						displayName: 'ID do Cliente',
-						name: 'clientid',
-						type: 'string',
-						default: '',
-
-					},
-					{
-						displayName: 'Data',
-						name: 'date',
-						type: 'dateTime',
-						default: '',
-						required: true,
+						description: 'Data de início da tarefa',
 					},
 					{
 						displayName: 'Data de Vencimento',
 						name: 'duedate',
 						type: 'dateTime',
 						default: '',
-						required: true,
+						description: 'Data de vencimento da tarefa',
+					},
+					{
+						displayName: 'Responsáveis',
+						name: 'assignees',
+						type: 'string',
+						default: '',
+						description: 'IDs dos responsáveis pela tarefa, separados por vírgula',
+					},
+					{
+						displayName: 'ID do Projeto',
+						name: 'project_id',
+						type: 'string',
+						default: '',
+						description: 'ID do projeto ao qual a tarefa pertence',
+					},
+					{
+						displayName: 'Marco',
+						name: 'milestone',
+						type: 'number',
+						default: 0,
+						description: 'ID do marco ao qual a tarefa pertence',
+					},
+				],
+			},
+
+			// ----------------------------------
+			//         Fatura: Campos
+			// ----------------------------------
+			{
+				displayName: 'ID da Fatura',
+				name: 'invoiceId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'invoice',
+						],
+						operation: [
+							'get',
+							'update',
+							'delete',
+						],
+					},
+				},
+				description: 'ID da fatura',
+			},
+			{
+				displayName: 'Dados da Fatura',
+				name: 'invoiceData',
+				type: 'collection',
+				placeholder: 'Adicionar Campo',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: [
+							'invoice',
+						],
+						operation: [
+							'create',
+							'update',
+						],
+					},
+				},
+				options: [
+					{
+						displayName: 'ID do Cliente',
+						name: 'clientid',
+						type: 'string',
+						default: '',
+						description: 'ID do cliente ao qual a fatura pertence',
+					},
+					{
+						displayName: 'Número',
+						name: 'number',
+						type: 'string',
+						default: '',
+						description: 'Número da fatura',
+					},
+					{
+						displayName: 'Data',
+						name: 'date',
+						type: 'dateTime',
+						default: '',
+						description: 'Data da fatura',
+					},
+					{
+						displayName: 'Data de Vencimento',
+						name: 'duedate',
+						type: 'dateTime',
+						default: '',
+						description: 'Data de vencimento da fatura',
 					},
 					{
 						displayName: 'Moeda',
 						name: 'currency',
 						type: 'number',
-						default: 1,
+						default: 0,
+						description: 'ID da moeda da fatura',
+					},
+					{
+						displayName: 'Subtotal',
+						name: 'subtotal',
+						type: 'number',
+						default: 0,
+						description: 'Subtotal da fatura',
+					},
+					{
+						displayName: 'Total',
+						name: 'total',
+						type: 'number',
+						default: 0,
+						description: 'Total da fatura',
 					},
 					{
 						displayName: 'Status',
 						name: 'status',
 						type: 'number',
-						default: 1,
+						default: 0,
+						description: 'ID do status da fatura',
+					},
+					{
+						displayName: 'ID do Projeto',
+						name: 'project_id',
+						type: 'string',
+						default: '',
+						description: 'ID do projeto ao qual a fatura pertence',
 					},
 					{
 						displayName: 'Itens',
 						name: 'items',
 						type: 'json',
 						default: '[]',
-						description: 'Array de itens da fatura em formato JSON',
+						description: 'Itens da fatura em formato JSON',
+					},
+				],
+			},
+
+			// ----------------------------------
+			//         Filtros e Opções
+			// ----------------------------------
+			{
+				displayName: 'Opções',
+				name: 'options',
+				type: 'collection',
+				placeholder: 'Adicionar Opção',
+				default: {},
+				displayOptions: {
+					show: {
+						operation: [
+							'getAll',
+						],
+					},
+				},
+				options: [
+					{
+						displayName: 'Limite',
+						name: 'limit',
+						type: 'number',
+						default: 50,
+						description: 'Número máximo de resultados a retornar',
+					},
+					{
+						displayName: 'Filtros',
+						name: 'filters',
+						type: 'json',
+						default: '{}',
+						description: 'Filtros em formato JSON',
 					},
 				],
 			},
 		],
 	};
 
-	async execute(this: IPerfexExecuteFunctions): Promise<INodeExecutionData[][]> {
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		const resource = this.getNodeParameter('resource', 0) as string;
-		const operation = this.getNodeParameter('operation', 0) as string;
-
+		
 		// Obter credenciais
 		const credentials = await this.getCredentials('perfexApi');
-		if (!credentials) {
-			throw new NodeOperationError(this.getNode(), 'Credenciais não encontradas');
-		}
-
-		// Inicializar cliente Perfex
-		const perfex = new PerfexClient({
-			baseUrl: credentials.baseUrl as string,
-			apiKey: credentials.apiKey as string,
-			apiToken: credentials.apiToken as string,
-		});
-
+		
+		const baseUrl = credentials.url as string;
+		const apiKey = credentials.apiKey as string;
+		const apiToken = credentials.apiToken as string;
+		
+		// Configurar cliente HTTP para API Perfex
+		const axios = require('axios');
+		const httpClient = axios.create({
+			baseURL: baseUrl,
+			timeout: 30000,
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': 'application/json',
+				'X-API-KEY': apiKey,
+				'X-API-TOKEN': apiToken
+			}
+		} );
+		
 		// Processar cada item
 		for (let i = 0; i < items.length; i++) {
 			try {
-				let result: IPerfexResponse<any> | IPerfexListResponse<any>;
-
+				const resource = this.getNodeParameter('resource', i) as string;
+				const operation = this.getNodeParameter('operation', i) as string;
+				
+				let responseData;
+				
+				// Executar operação com base no recurso e operação
 				switch (resource) {
 					case 'client':
-						result = await this.handleClientOperations(perfex, operation, i);
+						responseData = await processClientOperations(this, httpClient, operation, i );
 						break;
 					case 'contact':
-						result = await this.handleContactOperations(perfex, operation, i);
+						responseData = await processContactOperations(this, httpClient, operation, i );
 						break;
 					case 'lead':
-						result = await this.handleLeadOperations(perfex, operation, i);
+						responseData = await processLeadOperations(this, httpClient, operation, i );
 						break;
 					case 'project':
-						result = await this.handleProjectOperations(perfex, operation, i);
+						responseData = await processProjectOperations(this, httpClient, operation, i );
 						break;
 					case 'task':
-						result = await this.handleTaskOperations(perfex, operation, i);
+						responseData = await processTaskOperations(this, httpClient, operation, i );
 						break;
 					case 'invoice':
-						result = await this.handleInvoiceOperations(perfex, operation, i);
+						responseData = await processInvoiceOperations(this, httpClient, operation, i );
 						break;
 					default:
-						throw new NodeOperationError(
-							this.getNode(),
-							`Recurso "${resource}" não suportado`,
-						);
+						throw new NodeOperationError(this.getNode(), `Recurso desconhecido: ${resource}`);
 				}
-
-				if (!result.success) {
-					throw new NodeOperationError(
-						this.getNode(),
-						result.message || 'Erro na operação',
-					);
-				}
-
-				if ('total' in result) {
-					returnData.push(...this.helpers.returnJsonArray(result.data));
-				} else {
-					returnData.push(this.helpers.returnJsonArray(result.data));
-				}
-			} catch (error: unknown) {
+				
+				// Adicionar resultado ao retorno
+				returnData.push({
+					json: responseData,
+					pairedItem: {
+						item: i,
+					},
+				});
+			} catch (error) {
 				if (this.continueOnFail()) {
-					const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
 					returnData.push({
 						json: {
-							error: errorMessage,
+							error: (error as Error).message,
+						},
+						pairedItem: {
+							item: i,
 						},
 					});
 					continue;
@@ -678,206 +1257,7 @@ export class Perfex implements INodeType {
 				throw error;
 			}
 		}
-
+		
 		return [returnData];
-	}
-
-	private getNode(): INode {
-		return this.getNode();
-	}
-
-	private getNodeParameter(
-		parameterName: string,
-		itemIndex: number,
-		fallbackValue?: any,
-	): any {
-		return this.getNodeParameter(parameterName, itemIndex, fallbackValue);
-	}
-
-	private async handleClientOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexClient> | IPerfexListResponse<IPerfexClient>> {
-		const id = this.getNodeParameter('id', itemIndex) as string;
-		const clientData = this.getNodeParameter('clientData', itemIndex, {}) as Partial<IPerfexClient>;
-
-		switch (operation) {
-			case 'create':
-				return await perfex.clients.create(clientData);
-			case 'delete':
-				return await perfex.clients.delete(id);
-			case 'get':
-				return await perfex.clients.get(id);
-			case 'list':
-				return await perfex.clients.list();
-			case 'update':
-				return await perfex.clients.update(id, clientData);
-			default:
-				throw new NodeOperationError(
-					this.getNode(),
-					`Operação "${operation}" não suportada para clientes`,
-				);
-		}
-	}
-
-	private async handleContactOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexContact> | IPerfexListResponse<IPerfexContact>> {
-		const id = this.getNodeParameter('id', itemIndex) as string;
-		const contactData = this.getNodeParameter('contactData', itemIndex, {}) as Partial<IPerfexContact>;
-
-		switch (operation) {
-			case 'create':
-				return await perfex.contacts.create(contactData);
-			case 'delete':
-				return await perfex.contacts.delete(id);
-			case 'get':
-				return await perfex.contacts.get(id);
-			case 'list':
-				return await perfex.contacts.list();
-			case 'update':
-				return await perfex.contacts.update(id, contactData);
-			default:
-				throw new NodeOperationError(
-					this.getNode(),
-					`Operação "${operation}" não suportada para contatos`,
-				);
-		}
-	}
-
-	private async handleLeadOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexLead> | IPerfexListResponse<IPerfexLead>> {
-		const id = this.getNodeParameter('id', itemIndex) as string;
-		const leadData = this.getNodeParameter('leadData', itemIndex, {}) as Partial<IPerfexLead>;
-
-		switch (operation) {
-			case 'create':
-				return await perfex.leads.create(leadData);
-			case 'delete':
-				return await perfex.leads.delete(id);
-			case 'get':
-				return await perfex.leads.get(id);
-			case 'list':
-				return await perfex.leads.list();
-			case 'update':
-				return await perfex.leads.update(id, leadData);
-			default:
-				throw new NodeOperationError(
-					this.getNode(),
-					`Operação "${operation}" não suportada para leads`,
-				);
-		}
-	}
-
-	private async handleProjectOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexProject> | IPerfexListResponse<IPerfexProject>> {
-		const id = this.getNodeParameter('id', itemIndex) as string;
-		const inputData = this.getNodeParameter('projectData', itemIndex, {}) as ProjectInputData;
-		const projectData = { ...inputData } as Partial<IPerfexProject>;
-
-		// Converter string de membros para array
-		if (typeof inputData.members === 'string') {
-			(projectData as any).members = inputData.members.split(',').map((id: string) => parseInt(id.trim()));
-		}
-
-		switch (operation) {
-			case 'create':
-				return await perfex.projects.create(projectData);
-			case 'delete':
-				return await perfex.projects.delete(id);
-			case 'get':
-				return await perfex.projects.get(id);
-			case 'list':
-				return await perfex.projects.list();
-			case 'update':
-				return await perfex.projects.update(id, projectData);
-			default:
-				throw new NodeOperationError(
-					this.getNode(),
-					`Operação "${operation}" não suportada para projetos`,
-				);
-		}
-	}
-
-	private async handleTaskOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexTask> | IPerfexListResponse<IPerfexTask>> {
-		const id = this.getNodeParameter('id', itemIndex) as string;
-		const inputData = this.getNodeParameter('taskData', itemIndex, {}) as TaskInputData;
-		const taskData = { ...inputData } as Partial<IPerfexTask>;
-
-		// Converter string de responsáveis para array
-		if (typeof inputData.assignees === 'string') {
-			(taskData as any).assignees = inputData.assignees.split(',').map((id: string) => parseInt(id.trim()));
-		}
-
-		switch (operation) {
-			case 'create':
-				return await perfex.tasks.create(taskData);
-			case 'delete':
-				return await perfex.tasks.delete(id);
-			case 'get':
-				return await perfex.tasks.get(id);
-			case 'list':
-				return await perfex.tasks.list();
-			case 'update':
-				return await perfex.tasks.update(id, taskData);
-			default:
-				throw new NodeOperationError(
-					this.getNode(),
-					`Operação "${operation}" não suportada para tarefas`,
-				);
-		}
-	}
-
-	private async handleInvoiceOperations(
-		perfex: PerfexClient,
-		operation: string,
-		itemIndex: number,
-	): Promise<IPerfexResponse<IPerfexInvoice> | IPerfexListResponse<IPerfexInvoice>> {
-		const id = this.getNodeParameter('id', itemIndex) as string;
-		const inputData = this.getNodeParameter('invoiceData', itemIndex, {}) as InvoiceInputData;
-		const invoiceData = { ...inputData } as Partial<IPerfexInvoice>;
-
-		// Converter string de itens para array
-		if (typeof inputData.items === 'string') {
-			try {
-				(invoiceData as any).items = JSON.parse(inputData.items);
-			} catch (error) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'Formato inválido para os itens da fatura. Deve ser um JSON válido.',
-				);
-			}
-		}
-
-		switch (operation) {
-			case 'create':
-				return await perfex.invoices.create(invoiceData);
-			case 'delete':
-				return await perfex.invoices.delete(id);
-			case 'get':
-				return await perfex.invoices.get(id);
-			case 'list':
-				return await perfex.invoices.list();
-			case 'update':
-				return await perfex.invoices.update(id, invoiceData);
-			default:
-				throw new NodeOperationError(
-					this.getNode(),
-					`Operação "${operation}" não suportada para faturas`,
-				);
-		}
 	}
 } 
