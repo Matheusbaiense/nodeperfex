@@ -20,298 +20,576 @@ interface IPerfexExecuteFunctions extends IExecuteFunctions {
 
 // Funções auxiliares para processar operações por recurso
 async function processClientOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
-	const endpoint = '/api/clients';
+	const endpoint = '/won_api/won/api/clients';
 	
-	switch (operation) {
-		case 'getAll':
-			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
-			const filters = options.filters ? JSON.parse(options.filters as string) : {};
-			const limit = options.limit as number;
+	try {
+		switch (operation) {
+			case 'getAll':
+				const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+				const filters = options.filters ? JSON.parse(options.filters as string) : {};
+				const limit = options.limit as number;
+				const page = options.page as number;
+				
+				if (limit) {
+					filters.limit = limit;
+				}
+				if (page) {
+					filters.page = page;
+				}
+				
+				const response = await httpClient.get(endpoint, { params: filters } );
+				return response.data;
+				
+			case 'get':
+				const clientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
+				const getResponse = await httpClient.get(`${endpoint}/${clientId}` );
+				return getResponse.data;
+				
+			case 'create':
+				const clientData = executeFunctions.getNodeParameter('clientData', itemIndex, {}) as IDataObject;
+				
+				// Validar e formatar CNPJ/CPF
+				if (clientData.vat && typeof clientData.vat === 'string') {
+					clientData.vat = clientData.vat.replace(/\D/g, '');
+					if (clientData.vat.length !== 11 && clientData.vat.length !== 14) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'CPF/CNPJ inválido. Deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ)');
+					}
+				}
+				
+				const createResponse = await httpClient.post(endpoint, clientData );
+				return createResponse.data;
+				
+			case 'update':
+				const updateClientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
+				const updateClientData = executeFunctions.getNodeParameter('clientData', itemIndex, {}) as IDataObject;
+				
+				// Validar e formatar CNPJ/CPF
+				if (updateClientData.vat && typeof updateClientData.vat === 'string') {
+					updateClientData.vat = updateClientData.vat.replace(/\D/g, '');
+					if (updateClientData.vat.length !== 11 && updateClientData.vat.length !== 14) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'CPF/CNPJ inválido. Deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ)');
+					}
+				}
+				
+				const updateResponse = await httpClient.put(`${endpoint}/${updateClientId}`, updateClientData );
+				return updateResponse.data;
+				
+			case 'delete':
+				const deleteClientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
+				const deleteResponse = await httpClient.delete(`${endpoint}/${deleteClientId}` );
+				return deleteResponse.data;
+				
+			case 'join':
+				const vat = executeFunctions.getNodeParameter('vat', itemIndex) as string;
+				
+				// Validar e formatar CNPJ/CPF
+				const cleanVat = vat.replace(/\D/g, '');
+				if (cleanVat.length !== 11 && cleanVat.length !== 14) {
+					throw new NodeOperationError(executeFunctions.getNode(), 'CPF/CNPJ inválido. Deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ)');
+				}
+				
+				const joinResponse = await httpClient.get('/won_api/won/join', {
+					params: { vat: cleanVat }
+				});
+				return joinResponse.data;
+				
+			default:
+				throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		}
+	} catch (error: any) {
+		if (error.response) {
+			const status = error.response.status;
+			const message = error.response.data?.erro || error.response.data?.message || 'Erro desconhecido';
 			
-			if (limit) {
-				filters.limit = limit;
+			if (status === 401) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Erro de autenticação: Token inválido ou não fornecido');
+			} else if (status === 404) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Recurso não encontrado');
+			} else if (status === 422) {
+				throw new NodeOperationError(executeFunctions.getNode(), `Dados inválidos: ${message}`);
+			} else {
+				throw new NodeOperationError(executeFunctions.getNode(), `Erro ${status}: ${message}`);
 			}
-			
-			const response = await httpClient.get(endpoint, { params: filters } );
-			return response.data;
-			
-		case 'get':
-			const clientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
-			const getResponse = await httpClient.get(`${endpoint}/${clientId}` );
-			return getResponse.data;
-			
-		case 'create':
-			const clientData = executeFunctions.getNodeParameter('clientData', itemIndex, {}) as IDataObject;
-			const createResponse = await httpClient.post(endpoint, clientData );
-			return createResponse.data;
-			
-		case 'update':
-			const updateClientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
-			const updateClientData = executeFunctions.getNodeParameter('clientData', itemIndex, {}) as IDataObject;
-			const updateResponse = await httpClient.put(`${endpoint}/${updateClientId}`, updateClientData );
-			return updateResponse.data;
-			
-		case 'delete':
-			const deleteClientId = executeFunctions.getNodeParameter('clientId', itemIndex) as string;
-			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteClientId}` );
-			return deleteResponse.data;
-			
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		} else if (error.request) {
+			throw new NodeOperationError(executeFunctions.getNode(), 'Erro de conexão com o servidor');
+		} else if (error instanceof NodeOperationError) {
+			throw error;
+		} else {
+			throw new NodeOperationError(executeFunctions.getNode(), `Erro: ${error.message}`);
+		}
 	}
 }
 
 async function processContactOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
-	const endpoint = '/api/contacts';
+	const endpoint = '/won_api/won/api/contacts';
 	
-	switch (operation) {
-		case 'getAll':
-			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
-			const filters = options.filters ? JSON.parse(options.filters as string) : {};
-			const limit = options.limit as number;
+	try {
+		switch (operation) {
+			case 'getAll':
+				const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+				const filters = options.filters ? JSON.parse(options.filters as string) : {};
+				const limit = options.limit as number;
+				const page = options.page as number;
+				
+				if (limit) {
+					filters.limit = limit;
+				}
+				if (page) {
+					filters.page = page;
+				}
+				
+				const response = await httpClient.get(endpoint, { params: filters } );
+				return response.data;
+				
+			case 'get':
+				const contactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
+				const getResponse = await httpClient.get(`${endpoint}/${contactId}` );
+				return getResponse.data;
+				
+			case 'create':
+				const contactData = executeFunctions.getNodeParameter('contactData', itemIndex, {}) as IDataObject;
+				
+				// Validar email se fornecido
+				if (contactData.email && typeof contactData.email === 'string') {
+					const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+					if (!emailRegex.test(contactData.email)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Email inválido');
+					}
+				}
+				
+				const createResponse = await httpClient.post(endpoint, contactData );
+				return createResponse.data;
+				
+			case 'update':
+				const updateContactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
+				const updateContactData = executeFunctions.getNodeParameter('contactData', itemIndex, {}) as IDataObject;
+				
+				// Validar email se fornecido
+				if (updateContactData.email && typeof updateContactData.email === 'string') {
+					const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+					if (!emailRegex.test(updateContactData.email)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Email inválido');
+					}
+				}
+				
+				const updateResponse = await httpClient.put(`${endpoint}/${updateContactId}`, updateContactData );
+				return updateResponse.data;
+				
+			case 'delete':
+				const deleteContactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
+				const deleteResponse = await httpClient.delete(`${endpoint}/${deleteContactId}` );
+				return deleteResponse.data;
+				
+			default:
+				throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		}
+	} catch (error: any) {
+		if (error.response) {
+			const status = error.response.status;
+			const message = error.response.data?.erro || error.response.data?.message || 'Erro desconhecido';
 			
-			if (limit) {
-				filters.limit = limit;
+			if (status === 401) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Erro de autenticação: Token inválido ou não fornecido');
+			} else if (status === 404) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Recurso não encontrado');
+			} else if (status === 422) {
+				throw new NodeOperationError(executeFunctions.getNode(), `Dados inválidos: ${message}`);
+			} else {
+				throw new NodeOperationError(executeFunctions.getNode(), `Erro ${status}: ${message}`);
 			}
-			
-			const response = await httpClient.get(endpoint, { params: filters } );
-			return response.data;
-			
-		case 'get':
-			const contactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
-			const getResponse = await httpClient.get(`${endpoint}/${contactId}` );
-			return getResponse.data;
-			
-		case 'create':
-			const contactData = executeFunctions.getNodeParameter('contactData', itemIndex, {}) as IDataObject;
-			const createResponse = await httpClient.post(endpoint, contactData );
-			return createResponse.data;
-			
-		case 'update':
-			const updateContactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
-			const updateContactData = executeFunctions.getNodeParameter('contactData', itemIndex, {}) as IDataObject;
-			const updateResponse = await httpClient.put(`${endpoint}/${updateContactId}`, updateContactData );
-			return updateResponse.data;
-			
-		case 'delete':
-			const deleteContactId = executeFunctions.getNodeParameter('contactId', itemIndex) as string;
-			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteContactId}` );
-			return deleteResponse.data;
-			
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		} else if (error.request) {
+			throw new NodeOperationError(executeFunctions.getNode(), 'Erro de conexão com o servidor');
+		} else if (error instanceof NodeOperationError) {
+			throw error;
+		} else {
+			throw new NodeOperationError(executeFunctions.getNode(), `Erro: ${error.message}`);
+		}
 	}
 }
 
 async function processLeadOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
-	const endpoint = '/api/leads';
+	const endpoint = '/won_api/won/api/leads';
 	
-	switch (operation) {
-		case 'getAll':
-			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
-			const filters = options.filters ? JSON.parse(options.filters as string) : {};
-			const limit = options.limit as number;
+	try {
+		switch (operation) {
+			case 'getAll':
+				const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+				const filters = options.filters ? JSON.parse(options.filters as string) : {};
+				const limit = options.limit as number;
+				const page = options.page as number;
+				
+				if (limit) {
+					filters.limit = limit;
+				}
+				if (page) {
+					filters.page = page;
+				}
+				
+				const response = await httpClient.get(endpoint, { params: filters } );
+				return response.data;
+				
+			case 'get':
+				const leadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
+				const getResponse = await httpClient.get(`${endpoint}/${leadId}` );
+				return getResponse.data;
+				
+			case 'create':
+				const leadData = executeFunctions.getNodeParameter('leadData', itemIndex, {}) as IDataObject;
+				
+				// Validar email se fornecido
+				if (leadData.email && typeof leadData.email === 'string') {
+					const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+					if (!emailRegex.test(leadData.email)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Email inválido');
+					}
+				}
+				
+				const createResponse = await httpClient.post(endpoint, leadData );
+				return createResponse.data;
+				
+			case 'update':
+				const updateLeadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
+				const updateLeadData = executeFunctions.getNodeParameter('leadData', itemIndex, {}) as IDataObject;
+				
+				// Validar email se fornecido
+				if (updateLeadData.email && typeof updateLeadData.email === 'string') {
+					const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+					if (!emailRegex.test(updateLeadData.email)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Email inválido');
+					}
+				}
+				
+				const updateResponse = await httpClient.put(`${endpoint}/${updateLeadId}`, updateLeadData );
+				return updateResponse.data;
+				
+			case 'delete':
+				const deleteLeadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
+				const deleteResponse = await httpClient.delete(`${endpoint}/${deleteLeadId}` );
+				return deleteResponse.data;
+				
+			default:
+				throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		}
+	} catch (error: any) {
+		if (error.response) {
+			const status = error.response.status;
+			const message = error.response.data?.erro || error.response.data?.message || 'Erro desconhecido';
 			
-			if (limit) {
-				filters.limit = limit;
+			if (status === 401) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Erro de autenticação: Token inválido ou não fornecido');
+			} else if (status === 404) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Recurso não encontrado');
+			} else if (status === 422) {
+				throw new NodeOperationError(executeFunctions.getNode(), `Dados inválidos: ${message}`);
+			} else {
+				throw new NodeOperationError(executeFunctions.getNode(), `Erro ${status}: ${message}`);
 			}
-			
-			const response = await httpClient.get(endpoint, { params: filters } );
-			return response.data;
-			
-		case 'get':
-			const leadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
-			const getResponse = await httpClient.get(`${endpoint}/${leadId}` );
-			return getResponse.data;
-			
-		case 'create':
-			const leadData = executeFunctions.getNodeParameter('leadData', itemIndex, {}) as IDataObject;
-			const createResponse = await httpClient.post(endpoint, leadData );
-			return createResponse.data;
-			
-		case 'update':
-			const updateLeadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
-			const updateLeadData = executeFunctions.getNodeParameter('leadData', itemIndex, {}) as IDataObject;
-			const updateResponse = await httpClient.put(`${endpoint}/${updateLeadId}`, updateLeadData );
-			return updateResponse.data;
-			
-		case 'delete':
-			const deleteLeadId = executeFunctions.getNodeParameter('leadId', itemIndex) as string;
-			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteLeadId}` );
-			return deleteResponse.data;
-			
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		} else if (error.request) {
+			throw new NodeOperationError(executeFunctions.getNode(), 'Erro de conexão com o servidor');
+		} else if (error instanceof NodeOperationError) {
+			throw error;
+		} else {
+			throw new NodeOperationError(executeFunctions.getNode(), `Erro: ${error.message}`);
+		}
 	}
 }
 
 async function processProjectOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
-	const endpoint = '/api/projects';
+	const endpoint = '/won_api/won/api/projects';
 	
-	switch (operation) {
-		case 'getAll':
-			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
-			const filters = options.filters ? JSON.parse(options.filters as string) : {};
-			const limit = options.limit as number;
+	try {
+		switch (operation) {
+			case 'getAll':
+				const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+				const filters = options.filters ? JSON.parse(options.filters as string) : {};
+				const limit = options.limit as number;
+				const page = options.page as number;
+				
+				if (limit) {
+					filters.limit = limit;
+				}
+				if (page) {
+					filters.page = page;
+				}
+				
+				const response = await httpClient.get(endpoint, { params: filters } );
+				return response.data;
+				
+			case 'get':
+				const projectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
+				const getResponse = await httpClient.get(`${endpoint}/${projectId}` );
+				return getResponse.data;
+				
+			case 'create':
+				const projectData = executeFunctions.getNodeParameter('projectData', itemIndex, {}) as IDataObject;
+				
+				// Converter membros de string para array
+				if (projectData.members && typeof projectData.members === 'string') {
+					projectData.members = (projectData.members as string).split(',').map(id => parseInt(id.trim(), 10));
+				}
+				
+				const createResponse = await httpClient.post(endpoint, projectData );
+				return createResponse.data;
+				
+			case 'update':
+				const updateProjectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
+				const updateProjectData = executeFunctions.getNodeParameter('projectData', itemIndex, {}) as IDataObject;
+				
+				// Converter membros de string para array
+				if (updateProjectData.members && typeof updateProjectData.members === 'string') {
+					updateProjectData.members = (updateProjectData.members as string).split(',').map(id => parseInt(id.trim(), 10));
+				}
+				
+				const updateResponse = await httpClient.put(`${endpoint}/${updateProjectId}`, updateProjectData );
+				return updateResponse.data;
+				
+			case 'delete':
+				const deleteProjectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
+				const deleteResponse = await httpClient.delete(`${endpoint}/${deleteProjectId}` );
+				return deleteResponse.data;
+				
+			default:
+				throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		}
+	} catch (error: any) {
+		if (error.response) {
+			const status = error.response.status;
+			const message = error.response.data?.erro || error.response.data?.message || 'Erro desconhecido';
 			
-			if (limit) {
-				filters.limit = limit;
+			if (status === 401) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Erro de autenticação: Token inválido ou não fornecido');
+			} else if (status === 404) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Recurso não encontrado');
+			} else if (status === 422) {
+				throw new NodeOperationError(executeFunctions.getNode(), `Dados inválidos: ${message}`);
+			} else {
+				throw new NodeOperationError(executeFunctions.getNode(), `Erro ${status}: ${message}`);
 			}
-			
-			const response = await httpClient.get(endpoint, { params: filters } );
-			return response.data;
-			
-		case 'get':
-			const projectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
-			const getResponse = await httpClient.get(`${endpoint}/${projectId}` );
-			return getResponse.data;
-			
-		case 'create':
-			const projectData = executeFunctions.getNodeParameter('projectData', itemIndex, {}) as IDataObject;
-			
-			// Converter membros de string para array
-			if (projectData.members && typeof projectData.members === 'string') {
-				projectData.members = (projectData.members as string).split(',').map(id => parseInt(id.trim(), 10));
-			}
-			
-			const createResponse = await httpClient.post(endpoint, projectData );
-			return createResponse.data;
-			
-		case 'update':
-			const updateProjectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
-			const updateProjectData = executeFunctions.getNodeParameter('projectData', itemIndex, {}) as IDataObject;
-			
-			// Converter membros de string para array
-			if (updateProjectData.members && typeof updateProjectData.members === 'string') {
-				updateProjectData.members = (updateProjectData.members as string).split(',').map(id => parseInt(id.trim(), 10));
-			}
-			
-			const updateResponse = await httpClient.put(`${endpoint}/${updateProjectId}`, updateProjectData );
-			return updateResponse.data;
-			
-		case 'delete':
-			const deleteProjectId = executeFunctions.getNodeParameter('projectId', itemIndex) as string;
-			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteProjectId}` );
-			return deleteResponse.data;
-			
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		} else if (error.request) {
+			throw new NodeOperationError(executeFunctions.getNode(), 'Erro de conexão com o servidor');
+		} else if (error instanceof NodeOperationError) {
+			throw error;
+		} else {
+			throw new NodeOperationError(executeFunctions.getNode(), `Erro: ${error.message}`);
+		}
 	}
 }
 
 async function processTaskOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
-	const endpoint = '/api/tasks';
+	const endpoint = '/won_api/won/api/tasks';
 	
-	switch (operation) {
-		case 'getAll':
-			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
-			const filters = options.filters ? JSON.parse(options.filters as string) : {};
-			const limit = options.limit as number;
+	try {
+		switch (operation) {
+			case 'getAll':
+				const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+				const filters = options.filters ? JSON.parse(options.filters as string) : {};
+				const limit = options.limit as number;
+				const page = options.page as number;
+				
+				if (limit) {
+					filters.limit = limit;
+				}
+				if (page) {
+					filters.page = page;
+				}
+				
+				const response = await httpClient.get(endpoint, { params: filters } );
+				return response.data;
+				
+			case 'get':
+				const taskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
+				const getResponse = await httpClient.get(`${endpoint}/${taskId}` );
+				return getResponse.data;
+				
+			case 'create':
+				const taskData = executeFunctions.getNodeParameter('taskData', itemIndex, {}) as IDataObject;
+				
+				// Converter assignees de string para array
+				if (taskData.assignees && typeof taskData.assignees === 'string') {
+					taskData.assignees = (taskData.assignees as string).split(',').map(id => parseInt(id.trim(), 10));
+				}
+				
+				// Validar data de vencimento se fornecida
+				if (taskData.duedate && typeof taskData.duedate === 'string') {
+					const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+					if (!dateRegex.test(taskData.duedate)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Data de vencimento deve estar no formato YYYY-MM-DD');
+					}
+				}
+				
+				const createResponse = await httpClient.post(endpoint, taskData );
+				return createResponse.data;
+				
+			case 'update':
+				const updateTaskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
+				const updateTaskData = executeFunctions.getNodeParameter('taskData', itemIndex, {}) as IDataObject;
+				
+				// Converter assignees de string para array
+				if (updateTaskData.assignees && typeof updateTaskData.assignees === 'string') {
+					updateTaskData.assignees = (updateTaskData.assignees as string).split(',').map(id => parseInt(id.trim(), 10));
+				}
+				
+				// Validar data de vencimento se fornecida
+				if (updateTaskData.duedate && typeof updateTaskData.duedate === 'string') {
+					const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+					if (!dateRegex.test(updateTaskData.duedate)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Data de vencimento deve estar no formato YYYY-MM-DD');
+					}
+				}
+				
+				const updateResponse = await httpClient.put(`${endpoint}/${updateTaskId}`, updateTaskData );
+				return updateResponse.data;
+				
+			case 'delete':
+				const deleteTaskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
+				const deleteResponse = await httpClient.delete(`${endpoint}/${deleteTaskId}` );
+				return deleteResponse.data;
+				
+			default:
+				throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		}
+	} catch (error: any) {
+		if (error.response) {
+			const status = error.response.status;
+			const message = error.response.data?.erro || error.response.data?.message || 'Erro desconhecido';
 			
-			if (limit) {
-				filters.limit = limit;
+			if (status === 401) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Erro de autenticação: Token inválido ou não fornecido');
+			} else if (status === 404) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Recurso não encontrado');
+			} else if (status === 422) {
+				throw new NodeOperationError(executeFunctions.getNode(), `Dados inválidos: ${message}`);
+			} else {
+				throw new NodeOperationError(executeFunctions.getNode(), `Erro ${status}: ${message}`);
 			}
-			
-			const response = await httpClient.get(endpoint, { params: filters } );
-			return response.data;
-			
-		case 'get':
-			const taskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
-			const getResponse = await httpClient.get(`${endpoint}/${taskId}` );
-			return getResponse.data;
-			
-		case 'create':
-			const taskData = executeFunctions.getNodeParameter('taskData', itemIndex, {}) as IDataObject;
-			
-			// Converter responsáveis de string para array
-			if (taskData.assignees && typeof taskData.assignees === 'string') {
-				taskData.assignees = (taskData.assignees as string).split(',').map(id => parseInt(id.trim(), 10));
-			}
-			
-			const createResponse = await httpClient.post(endpoint, taskData );
-			return createResponse.data;
-			
-		case 'update':
-			const updateTaskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
-			const updateTaskData = executeFunctions.getNodeParameter('taskData', itemIndex, {}) as IDataObject;
-			
-			// Converter responsáveis de string para array
-			if (updateTaskData.assignees && typeof updateTaskData.assignees === 'string') {
-				updateTaskData.assignees = (updateTaskData.assignees as string).split(',').map(id => parseInt(id.trim(), 10));
-			}
-			
-			const updateResponse = await httpClient.put(`${endpoint}/${updateTaskId}`, updateTaskData );
-			return updateResponse.data;
-			
-		case 'delete':
-			const deleteTaskId = executeFunctions.getNodeParameter('taskId', itemIndex) as string;
-			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteTaskId}` );
-			return deleteResponse.data;
-			
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		} else if (error.request) {
+			throw new NodeOperationError(executeFunctions.getNode(), 'Erro de conexão com o servidor');
+		} else if (error instanceof NodeOperationError) {
+			throw error;
+		} else {
+			throw new NodeOperationError(executeFunctions.getNode(), `Erro: ${error.message}`);
+		}
 	}
 }
 
 async function processInvoiceOperations(executeFunctions: IExecuteFunctions, httpClient: any, operation: string, itemIndex: number ): Promise<any> {
-	const endpoint = '/api/invoices';
+	const endpoint = '/won_api/won/api/invoices';
 	
-	switch (operation) {
-		case 'getAll':
-			const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
-			const filters = options.filters ? JSON.parse(options.filters as string) : {};
-			const limit = options.limit as number;
-			
-			if (limit) {
-				filters.limit = limit;
-			}
-			
-			const response = await httpClient.get(endpoint, { params: filters } );
-			return response.data;
-			
-		case 'get':
-			const invoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
-			const getResponse = await httpClient.get(`${endpoint}/${invoiceId}` );
-			return getResponse.data;
-			
-		case 'create':
-			const invoiceData = executeFunctions.getNodeParameter('invoiceData', itemIndex, {}) as IDataObject;
-			
-			// Converter itens de string JSON para array
-			if (invoiceData.items && typeof invoiceData.items === 'string') {
-				try {
-					invoiceData.items = JSON.parse(invoiceData.items as string);
-				} catch (error) {
-					throw new NodeOperationError(executeFunctions.getNode(), 'Formato de itens inválido. Deve ser um array JSON válido.');
+	try {
+		switch (operation) {
+			case 'getAll':
+				const options = executeFunctions.getNodeParameter('options', itemIndex, {}) as IDataObject;
+				const filters = options.filters ? JSON.parse(options.filters as string) : {};
+				const limit = options.limit as number;
+				const page = options.page as number;
+				
+				if (limit) {
+					filters.limit = limit;
 				}
-			}
-			
-			const createResponse = await httpClient.post(endpoint, invoiceData );
-			return createResponse.data;
-			
-		case 'update':
-			const updateInvoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
-			const updateInvoiceData = executeFunctions.getNodeParameter('invoiceData', itemIndex, {}) as IDataObject;
-			
-			// Converter itens de string JSON para array
-			if (updateInvoiceData.items && typeof updateInvoiceData.items === 'string') {
-				try {
-					updateInvoiceData.items = JSON.parse(updateInvoiceData.items as string);
-				} catch (error) {
-					throw new NodeOperationError(executeFunctions.getNode(), 'Formato de itens inválido. Deve ser um array JSON válido.');
+				if (page) {
+					filters.page = page;
 				}
+				
+				const response = await httpClient.get(endpoint, { params: filters } );
+				return response.data;
+				
+			case 'get':
+				const invoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
+				const getResponse = await httpClient.get(`${endpoint}/${invoiceId}` );
+				return getResponse.data;
+				
+			case 'create':
+				const invoiceData = executeFunctions.getNodeParameter('invoiceData', itemIndex, {}) as IDataObject;
+				
+				// Converter items de string para array se necessário
+				if (invoiceData.items && typeof invoiceData.items === 'string') {
+					try {
+						invoiceData.items = JSON.parse(invoiceData.items);
+					} catch (e) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Items deve ser um JSON válido');
+					}
+				}
+				
+				// Validar data se fornecida
+				if (invoiceData.date && typeof invoiceData.date === 'string') {
+					const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+					if (!dateRegex.test(invoiceData.date)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Data deve estar no formato YYYY-MM-DD');
+					}
+				}
+				
+				// Validar data de vencimento se fornecida
+				if (invoiceData.duedate && typeof invoiceData.duedate === 'string') {
+					const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+					if (!dateRegex.test(invoiceData.duedate)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Data de vencimento deve estar no formato YYYY-MM-DD');
+					}
+				}
+				
+				const createResponse = await httpClient.post(endpoint, invoiceData );
+				return createResponse.data;
+				
+			case 'update':
+				const updateInvoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
+				const updateInvoiceData = executeFunctions.getNodeParameter('invoiceData', itemIndex, {}) as IDataObject;
+				
+				// Converter items de string para array se necessário
+				if (updateInvoiceData.items && typeof updateInvoiceData.items === 'string') {
+					try {
+						updateInvoiceData.items = JSON.parse(updateInvoiceData.items);
+					} catch (e) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Items deve ser um JSON válido');
+					}
+				}
+				
+				// Validar data se fornecida
+				if (updateInvoiceData.date && typeof updateInvoiceData.date === 'string') {
+					const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+					if (!dateRegex.test(updateInvoiceData.date)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Data deve estar no formato YYYY-MM-DD');
+					}
+				}
+				
+				// Validar data de vencimento se fornecida
+				if (updateInvoiceData.duedate && typeof updateInvoiceData.duedate === 'string') {
+					const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+					if (!dateRegex.test(updateInvoiceData.duedate)) {
+						throw new NodeOperationError(executeFunctions.getNode(), 'Data de vencimento deve estar no formato YYYY-MM-DD');
+					}
+				}
+				
+				const updateResponse = await httpClient.put(`${endpoint}/${updateInvoiceId}`, updateInvoiceData );
+				return updateResponse.data;
+				
+			case 'delete':
+				const deleteInvoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
+				const deleteResponse = await httpClient.delete(`${endpoint}/${deleteInvoiceId}` );
+				return deleteResponse.data;
+				
+			default:
+				throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		}
+	} catch (error: any) {
+		if (error.response) {
+			const status = error.response.status;
+			const message = error.response.data?.erro || error.response.data?.message || 'Erro desconhecido';
+			
+			if (status === 401) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Erro de autenticação: Token inválido ou não fornecido');
+			} else if (status === 404) {
+				throw new NodeOperationError(executeFunctions.getNode(), 'Recurso não encontrado');
+			} else if (status === 422) {
+				throw new NodeOperationError(executeFunctions.getNode(), `Dados inválidos: ${message}`);
+			} else {
+				throw new NodeOperationError(executeFunctions.getNode(), `Erro ${status}: ${message}`);
 			}
-			
-			const updateResponse = await httpClient.put(`${endpoint}/${updateInvoiceId}`, updateInvoiceData );
-			return updateResponse.data;
-			
-		case 'delete':
-			const deleteInvoiceId = executeFunctions.getNodeParameter('invoiceId', itemIndex) as string;
-			const deleteResponse = await httpClient.delete(`${endpoint}/${deleteInvoiceId}` );
-			return deleteResponse.data;
-			
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Operação desconhecida: ${operation}`);
+		} else if (error.request) {
+			throw new NodeOperationError(executeFunctions.getNode(), 'Erro de conexão com o servidor');
+		} else if (error instanceof NodeOperationError) {
+			throw error;
+		} else {
+			throw new NodeOperationError(executeFunctions.getNode(), `Erro: ${error.message}`);
+		}
 	}
 }
 
@@ -418,6 +696,58 @@ export class Perfex implements INodeType {
 						value: 'delete',
 						description: 'Deletar um registro',
 						action: 'Deletar um registro',
+					},
+				],
+				default: 'getAll',
+			},
+			{
+				displayName: 'Operação',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'client',
+						],
+					},
+				},
+				options: [
+					{
+						name: 'Criar',
+						value: 'create',
+						description: 'Criar um novo registro',
+						action: 'Criar um registro',
+					},
+					{
+						name: 'Atualizar',
+						value: 'update',
+						description: 'Atualizar um registro existente',
+						action: 'Atualizar um registro',
+					},
+					{
+						name: 'Obter',
+						value: 'get',
+						description: 'Obter um registro específico',
+						action: 'Obter um registro',
+					},
+					{
+						name: 'Listar',
+						value: 'getAll',
+						description: 'Obter todos os registros',
+						action: 'Obter todos os registros',
+					},
+					{
+						name: 'Deletar',
+						value: 'delete',
+						description: 'Deletar um registro',
+						action: 'Deletar um registro',
+					},
+					{
+						name: 'Associar',
+						value: 'join',
+						description: 'Associar cliente por CNPJ/CPF',
+						action: 'Associar cliente',
 					},
 				],
 				default: 'getAll',
@@ -533,6 +863,78 @@ export class Perfex implements INodeType {
 						type: 'boolean',
 						default: true,
 						description: 'Se o cliente está ativo',
+					},
+				],
+			},
+			{
+				displayName: 'CNPJ/CPF',
+				name: 'vat',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: [
+							'client',
+						],
+						operation: [
+							'join',
+						],
+					},
+				},
+				description: 'CNPJ ou CPF do cliente para associação',
+				placeholder: '12.345.678/0001-90 ou 123.456.789-00',
+			},
+			{
+				displayName: 'Opções Adicionais',
+				name: 'options',
+				type: 'collection',
+				placeholder: 'Adicionar opção',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: [
+							'client',
+							'contact',
+							'lead',
+							'project',
+							'task',
+							'invoice',
+						],
+						operation: [
+							'getAll',
+						],
+					},
+				},
+				options: [
+					{
+						displayName: 'Limite',
+						name: 'limit',
+						type: 'number',
+						default: 20,
+						description: 'Número máximo de registros a retornar',
+						typeOptions: {
+							minValue: 1,
+							maxValue: 1000,
+						},
+					},
+					{
+						displayName: 'Página',
+						name: 'page',
+						type: 'number',
+						default: 1,
+						description: 'Número da página a retornar',
+						typeOptions: {
+							minValue: 1,
+						},
+					},
+					{
+						displayName: 'Filtros',
+						name: 'filters',
+						type: 'string',
+						default: '',
+						description: 'Filtros em formato JSON para aplicar à busca',
+						placeholder: '{"active": 1, "country": "Brasil"}',
 					},
 				],
 			},

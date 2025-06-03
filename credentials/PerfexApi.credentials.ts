@@ -35,7 +35,7 @@ export class PerfexApi implements ICredentialType {
 		type: 'generic',
 		properties: {
 			headers: {
-				'X-API-TOKEN': '={{$credentials.apiToken}}',
+				'Authorization': '={{$credentials.apiToken}}',
 			},
 		},
 	};
