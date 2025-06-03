@@ -1,120 +1,124 @@
 # n8n-nodes-perfex
 
-Este é um nó n8n para integração com o Perfex CRM através do módulo WON API. Ele permite que você automatize suas operações no Perfex CRM usando o n8n.
-
-## Recursos
-
-- Gerenciamento completo de clientes
-- Gerenciamento de contatos
-- Gerenciamento de leads
-- Gerenciamento de projetos
-- Gerenciamento de tarefas
-- Gerenciamento de faturas
+Um nó n8n para integração com o **Perfex CRM** através do módulo WON API.
 
 ## Instalação
 
-Siga estas etapas para instalar o nó em sua instância n8n:
+Para instalar este nó n8n:
 
-1. Vá para a pasta de nós personalizados do n8n:
 ```bash
-cd ~/.n8n/custom
+npm install n8n-nodes-perfex
 ```
-
-2. Clone este repositório:
-```bash
-git clone https://github.com/Matheusbaiense/n8n-nodes-perfex.git
-```
-
-3. Instale as dependências:
-```bash
-cd n8n-nodes-perfex
-npm install
-```
-
-4. Compile o nó:
-```bash
-npm run build
-```
-
-5. Reinicie o n8n para que o novo nó seja carregado.
 
 ## Configuração
 
 Para usar este nó, você precisará configurar as credenciais do Perfex CRM:
 
-1. URL Base: A URL base do seu Perfex CRM (ex: https://seu-perfex.com)
-2. API Key: A chave da API do Perfex CRM
-3. API Token: O token da API do Perfex CRM
+1. **URL Base**: A URL base do seu Perfex CRM (ex: `https://seu-perfex.com`)
+2. **API Token**: O token da API do Perfex CRM (único campo necessário para autenticação)
 
-## Uso
+### Como obter o API Token
 
-O nó oferece as seguintes operações para cada recurso:
+1. Acesse seu Perfex CRM
+2. Vá em **Setup** → **Staff**
+3. Edite um usuário staff
+4. Na aba **API**, gere ou copie o token de API existente
 
-- Criar: Cria um novo registro
-- Obter: Obtém um registro por ID
-- Listar: Lista todos os registros
-- Atualizar: Atualiza um registro existente
-- Excluir: Exclui um registro
+## Recursos Disponíveis
 
-### Exemplos
+Este nó oferece operações completas para os seguintes recursos do Perfex:
 
-#### Criar um Cliente
-```json
-{
-  "company": "Empresa Exemplo",
-  "vat": "12.345.678/0001-90",
-  "phonenumber": "(11) 99999-9999",
-  "country": "Brasil",
-  "city": "São Paulo",
-  "zip": "01234-567",
-  "state": "SP",
-  "address": "Rua Exemplo, 123"
-}
-```
+### 📋 Clients (Clientes)
+- **Create**: Criar novo cliente
+- **Read**: Obter dados de um cliente específico
+- **Update**: Atualizar dados de um cliente
+- **Delete**: Remover um cliente
+- **List**: Listar todos os clientes
 
-#### Criar um Contato
-```json
-{
-  "userid": 1,
-  "firstname": "João",
-  "lastname": "Silva",
-  "email": "joao@exemplo.com",
-  "phonenumber": "(11) 99999-9999",
-  "title": "Gerente",
-  "is_primary": 1,
-  "active": 1
-}
-```
+### 👤 Contacts (Contatos)
+- **Create**: Criar novo contato
+- **Read**: Obter dados de um contato específico
+- **Update**: Atualizar dados de um contato
+- **Delete**: Remover um contato
+- **List**: Listar todos os contatos
 
-## Desenvolvimento
+### 🎯 Leads (Leads)
+- **Create**: Criar novo lead
+- **Read**: Obter dados de um lead específico
+- **Update**: Atualizar dados de um lead
+- **Delete**: Remover um lead
+- **List**: Listar todos os leads
 
-Para contribuir com o desenvolvimento:
+### 📊 Projects (Projetos)
+- **Create**: Criar novo projeto
+- **Read**: Obter dados de um projeto específico
+- **Update**: Atualizar dados de um projeto
+- **Delete**: Remover um projeto
+- **List**: Listar todos os projetos
 
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Faça commit das suas alterações (`git commit -am 'Adiciona nova feature'`)
-4. Faça push para a branch (`git push origin feature/nova-feature`)
-5. Crie um Pull Request
+### ✅ Tasks (Tarefas)
+- **Create**: Criar nova tarefa
+- **Read**: Obter dados de uma tarefa específica
+- **Update**: Atualizar dados de uma tarefa
+- **Delete**: Remover uma tarefa
+- **List**: Listar todas as tarefas
 
-### Scripts Disponíveis
+### 💰 Invoices (Faturas)
+- **Create**: Criar nova fatura
+- **Read**: Obter dados de uma fatura específica
+- **Update**: Atualizar dados de uma fatura
+- **Delete**: Remover uma fatura
+- **List**: Listar todas as faturas
 
-- `npm run build`: Compila o nó
-- `npm run dev`: Inicia o modo de desenvolvimento com watch
-- `npm run format`: Formata o código usando Prettier
-- `npm run lint`: Executa o linter
-- `npm run lintfix`: Corrige problemas de linting automaticamente
+## Como Usar
 
-## Licença
+1. **Adicionar Credenciais**: Configure sua URL base e API Token do Perfex
+2. **Escolher Recurso**: Selecione o recurso desejado (Client, Contact, Lead, etc.)
+3. **Escolher Operação**: Selecione a operação (Create, Read, Update, Delete, List)
+4. **Preencher Parâmetros**: Complete os campos necessários para a operação
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+## Características Técnicas
+
+- **Total de Operações**: 30 operações (6 recursos × 5 operações cada)
+- **Autenticação**: Via API Token com header `X-API-TOKEN`
+- **Dependências**: axios para requisições HTTP
+- **Compatibilidade**: n8n versão 0.107.0+
+- **Node.js**: Versão 16.0.0 ou superior
+
+## Exemplos de Uso
+
+### Criar um Cliente
+1. Selecione **Recurso**: Client
+2. Selecione **Operação**: Create
+3. Preencha os campos obrigatórios como nome da empresa
+4. Execute o workflow
+
+### Listar Leads
+1. Selecione **Recurso**: Lead
+2. Selecione **Operação**: List
+3. Execute para obter todos os leads
+
+### Atualizar Projeto
+1. Selecione **Recurso**: Project
+2. Selecione **Operação**: Update
+3. Forneça o ID do projeto e os campos a serem atualizados
+4. Execute o workflow
 
 ## Suporte
 
-Se você encontrar algum problema ou tiver alguma sugestão, por favor, abra uma issue no GitHub.
+- **Documentação da API**: [Perfex CRM API Documentation](https://docs.perfexcrm.com/api/)
+- **Repositório**: [GitHub](https://github.com/Matheusbaiense/nodeperfex)
+- **Issues**: [GitHub Issues](https://github.com/Matheusbaiense/nodeperfex/issues)
+
+## Licença
+
+MIT License
 
 ## Autor
 
-- Matheus Baiense (matheusbaiense@gmail.com)
+**Matheus Baiense**
+- Email: matheusbaiense@gmail.com
+- GitHub: [@Matheusbaiense](https://github.com/Matheusbaiense)
 
 ## Agradecimentos
 

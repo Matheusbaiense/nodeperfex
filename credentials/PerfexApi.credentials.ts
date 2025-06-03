@@ -27,18 +27,7 @@ export class PerfexApi implements ICredentialType {
 			},
 			default: '',
 			required: true,
-			description: 'Token da API do Perfex CRM. Este é o único campo obrigatório para autenticação.',
-		},
-		{
-			displayName: 'API Key',
-			name: 'apiKey',
-			type: 'string',
-			typeOptions: {
-				password: true,
-			},
-			default: '',
-			required: false,
-			description: 'Chave da API do Perfex CRM (opcional). Se não fornecida, será usado o mesmo valor do Token para compatibilidade.',
+			description: 'Token da API do Perfex CRM. Este é o único campo necessário para autenticação.',
 		},
 	];
 

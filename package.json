@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-perfex",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Nó n8n para integração com o Perfex CRM através do módulo WON API",
   "keywords": [
     "n8n-community-node-package",

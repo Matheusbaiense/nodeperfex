@@ -1035,8 +1035,8 @@ export class Perfex implements INodeType {
 			{
 				displayName: 'ID da Fatura',
 				name: 'invoiceId',
-				type: 'string',
-				default: '',
+						type: 'string',
+						default: '',
 				required: true,
 				displayOptions: {
 					show: {
@@ -1182,7 +1182,7 @@ export class Perfex implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		
+
 		// Obter credenciais
 		const credentials = await this.getCredentials('perfexApi');
 		
@@ -1200,13 +1200,13 @@ export class Perfex implements INodeType {
 				'X-API-TOKEN': apiToken
 			}
 		} );
-		
+
 		// Processar cada item
 		for (let i = 0; i < items.length; i++) {
 			try {
 				const resource = this.getNodeParameter('resource', i) as string;
 				const operation = this.getNodeParameter('operation', i) as string;
-				
+
 				let responseData;
 				
 				// Executar operação com base no recurso e operação
@@ -1255,7 +1255,7 @@ export class Perfex implements INodeType {
 				throw error;
 			}
 		}
-		
+
 		return [returnData];
 	}
 } 
